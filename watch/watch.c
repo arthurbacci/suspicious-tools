@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <errno.h>
 
 #include <susargparse.h>
 
@@ -41,9 +42,7 @@ int main(int argc, char **argv) {
 
 	if (susargparse_afterparse >= argc) usage();
 
-	if (options & OPT_EXEC) {
-
-	} else {
+	if (!(options & OPT_EXEC)) {
 		size_t len = 0;
 		int i;
 		char *cmd;
@@ -84,10 +83,10 @@ int main(int argc, char **argv) {
 				return 1;
 			case 0:
 				if (options & OPT_EXEC)
-					{}
+					execv(argv[susargparse_afterparse], &argv[susargparse_afterparse]);
 				else
 					execl("/bin/sh", "sh", "-c", command, (char *) NULL);
-				fprintf(stderr, "Couldn't execl\n");
+				fprintf(stderr, "Couldn't execl %s\n", strerror(errno));
 				_exit(1);
 			default:
 				if (waitpid(child, &waitpid_status, 0) == -1) {
