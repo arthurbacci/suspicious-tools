@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 				return 1;
 			case 0:
 				if (options & OPT_EXEC)
-					execv(argv[susargparse_afterparse], &argv[susargparse_afterparse]);
+					execvp(argv[susargparse_afterparse], &argv[susargparse_afterparse]);
 				else
 					execl("/bin/sh", "sh", "-c", command, (char *) NULL);
 				fprintf(stderr, "Couldn't execl %s\n", strerror(errno));
