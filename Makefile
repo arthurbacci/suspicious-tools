@@ -1,14 +1,12 @@
-all: clean
+libs/%.o: libs/%.c libs/%.h
+	$(CC) -c -o $@ $< $(CFLAGS) -I. $(LIBS)
 
-watch: watch/*.c libs/*.o
-	$(CC) $^ $(CFLAGS) -Ilibs $(LIBS) -o watch/watch
+watch.bin: watch/watch.c libs/susargparse.o
+	$(CC) -o $@ $^ $(CFLAGS) -Ilibs $(LIBS)
 
-libs/*.o: libs/*.c
-	cd libs;\
-	$(CC) -c ../$^ $(CFLAGS) -I. $(LIBS)
-	cd ..
+.PHONY: clean
 
 clean:
 	rm -f libs/*.o
-	rm -f watch/watch
+	rm -f *.bin
 

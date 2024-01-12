@@ -2,7 +2,7 @@
 .SH NAME
 watch \- repeatedly execute a command, displaying its output visually
 .SH SYNOPSIS
-\fBwatch\fR [\fB-n\fR \fIseconds\fR] [\fB-tp\fR] \fIcommand\fR
+\fBwatch\fR [\fB-n\fR \fIseconds\fR] [\fB-tpx\fR] \fIcommand\fR
 .SH DESCRIPTION
 .B watch
 runs the specified command repeatedly, waiting the specified number of seconds
@@ -17,6 +17,14 @@ Don't display the bar.
 .TP
 \fB-p\fR, \fB--precise\fR
 Wait the specified number of seconds minus the time the command took to run.
+.TP
+\fB-x\fR, \fB--exec\fR
+Instead of using
+.BR system (3)
+, use
+.BR exec (3)
+instead. Meaning that you shouldn't use shell features such as pipes. If you
+want to use another shell, try \fBwatch -x ksh93 -c 'echo a'\fR.
 .SH REPORTING BUGS
 Please open an issue at https://github.com/arthurbacci/suspicious-tools or send
 me an email at arthurbacci@protonmail.com.
