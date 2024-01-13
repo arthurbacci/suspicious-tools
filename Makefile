@@ -1,8 +1,14 @@
+all: watch.bin timeout.bin
+
 libs/%.o: libs/%.c libs/%.h
 	$(CC) -c -o $@ $< $(CFLAGS) -I. $(LIBS)
 
 watch.bin: watch/watch.c libs/susargparse.o
 	$(CC) -o $@ $^ $(CFLAGS) -Ilibs $(LIBS)
+
+timeout.bin: timeout/timeout.c libs/susargparse.o
+	$(CC) -o $@ $^ $(CFLAGS) -Ilibs $(LIBS)
+
 
 .PHONY: clean
 
