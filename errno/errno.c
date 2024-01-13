@@ -19,10 +19,11 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
+#include <string.h>
 
 int main() {
 
-#define ERRNO_MACRO(n, s) printf("%s %d\n", (s), (n));
+#define ERRNO_MACRO(n, s) printf("%s %d %s\n", (s), (n), strerror(n));
 
 #include "errnos.def"
 
