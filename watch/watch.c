@@ -1,3 +1,15 @@
+/*
+ * arthurbacci's suspicious tools
+ * WATCH
+ *
+ * Distributed under the public domain under the terms of either:
+ * 	Unlicense
+ * 	CC0
+ * 	BSD0
+ *
+ * ~ Arthur Bacci 2024
+ */
+
 #define _POSIX_C_SOURCE 199309L
 
 #include <stdio.h>
