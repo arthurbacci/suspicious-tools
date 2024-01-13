@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 
 	if (susargparse_afterparse >= argc) usage();
 
-	if (!(options & OPT_EXEC)) {
+	if (!(options & OPT_EXEC) || !(options & OPT_NO_BAR)) {
 		size_t len = 0;
 		int i;
 		char *cmd;
@@ -120,10 +120,18 @@ int main(int argc, char **argv) {
 
 		printf("\x1b[1;1H\x1B[J\x1b[1;1H");
 
-		if (!(options & OPT_NO_BAR))
-			printf("\x1b[7mEvery %d.%d seconds\x1b[m\n", (int)interval.tv_sec, (int)interval.tv_nsec);
-		else
+		if (!(options & OPT_NO_BAR)) {
+			printf("\x1b[7m");
+			if (options & OPT_EXEC) {
+				printf("p>%s", command);
+			} else {
+				printf("sh>%s", command);
+			}
+			printf(" %d.%ds", (int)interval.tv_sec, (int)interval.tv_nsec);
+			printf("\x1b[m\n");
+		} else {
 			fflush(stdout);
+		}
 
 		switch (child = fork()) {
 			case -1:
