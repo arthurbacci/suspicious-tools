@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 199309L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -5,8 +7,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <time.h>
+#include <ctype.h>
 
 #include <susargparse.h>
+
 
 #define OPT_NO_BAR     0x01
 #define OPT_PRECISE    0x02
@@ -15,13 +20,49 @@
 static unsigned int options = 0;
 
 void usage() {
+	/* FIXME: less suspicious */
 	fprintf(stderr, "amongus\n");
 	exit(EXIT_FAILURE);
 }
 
+int parse_interval(const char *ss, struct timespec *interval) {
+	char s[32];
+	char *afterpoint = NULL;
+	size_t i, afterpoint_len;
+
+	strncpy(s, ss, 32);
+	s[31] = '\0';
+
+	for (i = 0; s[i]; i++) {
+		if (s[i] == '.') {
+			if (afterpoint == NULL) {
+				afterpoint = &s[i + 1];
+				s[i] = '\0';
+			} else {
+				return -1;
+			}
+		} else if (!isdigit(s[i])) {
+			return -1;
+		}
+	}
+
+	interval->tv_sec = strlen(s) ? atoi(s) : 0;
+	interval->tv_nsec = afterpoint ? atoi(afterpoint) : 0;
+
+	if (afterpoint == NULL) return 0;
+
+	afterpoint_len = strlen(afterpoint);
+	if (afterpoint_len > 9) return -1;
+	for (i = afterpoint_len; i < 9; i++)
+		interval->tv_nsec *= 10;
+
+	return 0;
+}
+
 int main(int argc, char **argv) {
-	int interval_i, interval;
+	int interval_i;
 	char *command = NULL;
+	struct timespec interval;
 
 	/* TODO: consider using getopt */
 
@@ -34,11 +75,18 @@ int main(int argc, char **argv) {
 
 	if (-1 == (interval_i = susargparse_value(argc, argv, "n")))
 		interval_i = susargparse_value(argc, argv, "interval");
+
 	
 	if (interval_i >= argc) usage();
 
-	if (interval_i == -1) interval = 2;
-	else interval = atoi(argv[interval_i]);
+	if (interval_i == -1) {
+		interval.tv_sec = 2;
+		interval.tv_nsec = 0;
+	} else {
+		if (-1 == parse_interval(argv[interval_i], &interval))
+			usage();
+	}
+
 
 	if (susargparse_afterparse >= argc) usage();
 
@@ -73,7 +121,7 @@ int main(int argc, char **argv) {
 		printf("\x1b[1;1H\x1B[J\x1b[1;1H");
 
 		if (!(options & OPT_NO_BAR))
-			printf("\x1b[7mEvery %d seconds\x1b[m\n", interval);
+			printf("\x1b[7mEvery %d.%d seconds\x1b[m\n", (int)interval.tv_sec, (int)interval.tv_nsec);
 		else
 			fflush(stdout);
 
@@ -86,7 +134,7 @@ int main(int argc, char **argv) {
 					execvp(argv[susargparse_afterparse], &argv[susargparse_afterparse]);
 				else
 					execl("/bin/sh", "sh", "-c", command, (char *) NULL);
-				fprintf(stderr, "Couldn't execl %s\n", strerror(errno));
+				fprintf(stderr, "Couldn't execl: %s\n", strerror(errno));
 				_exit(1);
 			default:
 				if (waitpid(child, &waitpid_status, 0) == -1) {
@@ -105,7 +153,7 @@ int main(int argc, char **argv) {
 
 		fflush(stdout);
 
-		sleep(interval);
+		nanosleep(&interval, NULL);
 	}
 
 	return 0;
