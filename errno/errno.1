@@ -2,10 +2,14 @@
 .SH NAME
 errno \- display the available errno codes
 .SH SYNOPSIS
-\fBerrno\fR
+\fBerrno\fR [\fB-S\fR] [\fIname or number\fR]
 .SH DESCRIPTION
 .B errno
-Displays the errno codes defined in the system (in which it was compiled).
+If no arguments are passed, displays the errno codes defined in the system in
+which it was compiled. If a number is passed to it, it displays the errno
+name(s) associated with it. If a name is passed, it displays it's information.
+Output is in a form similar to \fBEAGAIN 11 Resource temporarily
+unavailable\fR.
 .SH OPTIONS
 .TP
 \fB-S\fR
