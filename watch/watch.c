@@ -10,6 +10,10 @@
  * ~ Arthur Bacci 2024
  */
 
+/*
+ * TODO: implement --precise
+ */
+
 #define _POSIX_C_SOURCE 199309L
 
 #include <stdio.h>
