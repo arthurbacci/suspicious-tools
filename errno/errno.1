@@ -1,0 +1,18 @@
+.TH ERRNO 1 "2024-01-13" "arthurbacci's suspicious-tools"
+.SH NAME
+errno \- display the available errno codes
+.SH SYNOPSIS
+\fBerrno\fR
+.SH DESCRIPTION
+.B errno
+Displays the errno codes defined in the system (in which it was compiled).
+.SH OPTIONS
+.TP
+\fB-S\fR
+Display the message in all locales. Currently not implemented.
+.SH NOTES
+Differently from moreutils' implementation, there are no options for searching.
+Instead, you're supposed to use \fBerrno | grep \fIword\fR.
+.SH REPORTING BUGS
+Please open an issue at https://github.com/arthurbacci/suspicious-tools or send
+me an email at arthurbacci@protonmail.com.
