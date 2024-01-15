@@ -9,7 +9,6 @@ watch.bin: watch/watch.c libs/susargparse.o
 timeout.bin: timeout/timeout.c libs/susargparse.o
 	$(CC) -o $@ $^ $(CFLAGS) -Ilibs $(LIBS)
 
-
 errno/errnos_draft.def: errno/gen_errnos_draft.sh errno/include_errno.c
 	sh -c 'cd errno && ./gen_errnos_draft.sh'
 errno/errnos.def: errno/gen_errnos.c errno/errnos_draft.def
@@ -19,8 +18,8 @@ errno/errnos.def: errno/gen_errnos.c errno/errnos_draft.def
 	echo 'Please ensure the following outputs are equal:'
 	wc -l errno/errnos_draft.def
 	wc -l errno/errnos.def
-errno.bin: errno/errno.c errno/errnos.def
-	$(CC) -o $@ $< $(CFLAGS) -Ilibs $(LIBS)
+errno.bin: errno/errno.c libs/susargparse.o errno/errnos.def
+	$(CC) -o $@ errno/errno.c libs/susargparse.o $(CFLAGS) -Ilibs $(LIBS)
 
 
 .PHONY: clean

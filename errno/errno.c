@@ -11,9 +11,7 @@
  */
 
 /*
- * TODO: try to implement locales: strerror_l? maybe try to implement -S for
- *       listing all  locales, similarly to moreutils
- * TODO: maybe throw the data to a variable (static) to decrease binary size
+ * TODO: exit with error if the name-or-number isn't found.
  */
 
 #include <stdio.h>
@@ -21,7 +19,12 @@
 #include <ctype.h>
 #include <errno.h>
 #include <string.h>
-/* #include <locale.h> */
+#include <locale.h>
+#include <unistd.h>
+
+#include <susargparse.h>
+
+#define LOCALE_BUFLEN 128
 
 
 #define ERRNO_MACRO(n, s) {(n), (s)},
@@ -34,16 +37,15 @@ static struct {
 };
 #undef ERRNO_MACRO
 
-void usage() {
-	fprintf(stderr, "errno [name-or-number]\n");
+void die(char *s) {
+	fprintf(stderr, s);
+	fprintf(stderr, "%d\n", errno);
 	exit(1);
 }
 
 void print_errno(size_t i) {
-	printf(
-		"%s %d %s\n",
-		errnos_data[i].s, errnos_data[i].n, strerror(errnos_data[i].n)
-	);
+	printf("%s %d %s\n",
+	       errnos_data[i].s, errnos_data[i].n, strerror(errnos_data[i].n));
 }
 
 void print_all_errnos() {
@@ -73,22 +75,73 @@ void print_s_errno(char *s) {
 		}
 }
 
-int main(int argc, char **argv) {
-	/* setlocale(LC_ALL, ""); */
+void find_errno(char *s) {
+	size_t i;
+	/* if s[i] is NULL, all the characters are digits */
+	for (i = 0; s[i] && isdigit(s[i]); i++);
 
+	if (s[i]) print_s_errno(s);
+	else      print_n_errno(atoi(s));
+}
 
-	if (argc == 1) {
+void do_errno(int argc, char **argv) {
+	if (susargparse_afterparse >= argc)
 		print_all_errnos();
-	} else if (argc == 2) {
-		size_t i;
-		/* if argv[1][i] is NULL, all the characters are digits */
-		for (i = 0; argv[1][i] && isdigit(argv[1][i]); i++);
+	else
+		find_errno(argv[1]);
+}
 
-		if (argv[1][i]) print_s_errno(argv[1]);
-		else            print_n_errno(atoi(argv[1]));
-	} else {
-		usage();
+void do_all_locales(int argc, char **argv) {
+	int pipe_f[2];
+
+	/* TODO: error handling */
+	pipe(pipe_f);
+
+	switch (fork()) {
+	case -1:
+		die("Couldn't fork\n");
+		break;
+	case 0:
+		/* In case me (suspicious' `errno`) is called from a execve or
+		 * something else that doesn't an stdout set by default
+		 *
+		 * Practise recommended by The Linux Programming Interface */
+		if (pipe_f[1] != STDOUT_FILENO) {
+			dup2(pipe_f[1], STDOUT_FILENO);
+			close(pipe_f[1]);
+		}
+		execlp("locale", "locale", "-a", (char *) NULL);
+		_exit(1);
 	}
+	/* I'm the parent */
+
+	close(pipe_f[1]);
+
+	for (;;) {
+		char buf[LOCALE_BUFLEN];
+		size_t len;
+
+
+		for (len = 0; 1 == read(pipe_f[0], &buf[len], 1); len++)
+			if (buf[len] == '\n') break;
+		buf[len] = '\0';
+		
+		if (len == 0) break;
+		
+
+		setlocale(LC_ALL, buf);
+		
+		do_errno(argc, argv);
+	}
+}
+
+int main(int argc, char **argv) {
+	int all_locales;
+
+	all_locales = susargparse_option(argc, argv, "S");
+	
+	if (all_locales) do_all_locales(argc, argv);
+	else             do_errno(argc, argv);
 
 
 	return 0;
