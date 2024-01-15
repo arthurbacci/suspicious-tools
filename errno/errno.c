@@ -21,17 +21,37 @@
 #include <ctype.h>
 #include <errno.h>
 #include <string.h>
+/* #include <locale.h> */
+
+
+#define ERRNO_MACRO(n, s) {(n), (s)},
+static struct {
+	int n;
+	char *s;
+} errnos_data[] = {
+	#include "errnos.def"
+	{0, NULL}
+};
+#undef ERRNO_MACRO
 
 void usage() {
 	fprintf(stderr, "errno [name-or-number]\n");
 	exit(1);
 }
 
+void print_errno(size_t i) {
+	printf(
+		"%s %d %s\n",
+		errnos_data[i].s, errnos_data[i].n, strerror(errnos_data[i].n)
+	);
+}
 int main(int argc, char **argv) {
+	/* setlocale(LC_ALL, ""); */
+
 	if (argc == 1) {
-#define ERRNO_MACRO(n, s) printf("%s %d %s\n", (s), (n), strerror(n));
-#include "errnos.def"
-#undef ERRNO_MACRO
+		size_t i;
+		for (i = 0; errnos_data[i].s; i++)
+			print_errno(i);
 	} else if (argc == 2) {
 		/* boolean */
 		int is_number = 1;
@@ -45,18 +65,22 @@ int main(int argc, char **argv) {
 
 		if (is_number) {
 			int number = atoi(argv[1]);
-			/* SWITCH is not much of an option since there are
-			 * duplicate numbers. Neither is else if. */
-#define ERRNO_MACRO(n, s) if ((n) == number) printf("%s %d %s\n", (s), (n), strerror(n));
-#include "errnos.def"
-#undef ERRNO_MACRO
+			size_t i;
+			/* TODO: maybe take advantage of the list being 
+			 * sorted? */
+
+			for (i = 0; errnos_data[i].s; i++)
+				if (errnos_data[i].n == number)
+					print_errno(i);
 		} else {
-			/* else if is fine since there are no duplicate numbers
+			/* break is fine since there are no duplicate numbers
 			 * for a name. */
-			if (0) {}
-#define ERRNO_MACRO(n, s) else if (0 == strcmp((s), argv[1])) printf("%s %d %s\n", (s), (n), strerror(n));
-#include "errnos.def"
-#undef ERRNO_MACRO
+			for (i = 0; errnos_data[i].s; i++) {
+				if (0 == strcmp(errnos_data[i].s, argv[1])) {
+					print_errno(i);
+					break;
+				}
+			}
 		}
 	} else {
 		usage();

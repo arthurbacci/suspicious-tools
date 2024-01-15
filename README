@@ -4,4 +4,6 @@
 
 P All contributions on this repository need to be licensed
   under the public domain.
+P For development, please compile with `CFLAGS='--std=c90
+  -ansi -Wall -Wextra -pedantic -fsanitize=address' make`
 

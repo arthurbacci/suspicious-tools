@@ -30,6 +30,9 @@ int main() {
 		if (min == INT_MAX) break;
 		max = min;
 
+/* If `else if` or switch is used instead, errnos with repeated numbers may be
+ * ignored (EAGAIN/EWOULDBLOCk are usually both the same number, so one of them
+ * would be skipped */
 #define ERRNO_MACRO(n, s) if ((n) == min) fprintf(fp, "ERRNO_MACRO(%d, \"%s\")\n", (n), (s));
 #include "errnos_draft.def"
 #undef ERRNO_MACRO
