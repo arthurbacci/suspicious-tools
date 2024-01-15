@@ -10,6 +10,10 @@
  * ~ Arthur Bacci 2024
  */
 
+/*
+ * TODO: handle signals
+ */
+
 #define _POSIX_C_SOURCE 1
 
 #include <stdio.h>
