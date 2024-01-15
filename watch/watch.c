@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <errno.h>
 #include <time.h>
 #include <ctype.h>
@@ -134,6 +135,13 @@ int main(int argc, char **argv) {
 	while (1) {
 		pid_t child;
 		int waitpid_status;
+		struct timeval before, after;
+		struct timespec precise_interval;
+
+		/* NOTE: may be soon deprecated
+		 * It's being used because of the easy conversion to timespec
+		 */
+		if (options & OPT_PRECISE) gettimeofday(&before, NULL);
 
 		printf("\x1b[1;1H\x1B[J\x1b[1;1H");
 
@@ -170,15 +178,31 @@ int main(int argc, char **argv) {
 						beeeeep()
 				}*/
 		}
-
-		if (options & OPT_EXEC) {
-			
-		}
 		
 
 		fflush(stdout);
 
-		nanosleep(&interval, NULL);
+		if (options & OPT_PRECISE) {
+			gettimeofday(&after, NULL);
+			after.tv_sec -= before.tv_sec;
+			if (after.tv_usec < before.tv_usec) {
+				after.tv_sec -= 1;
+				after.tv_usec += 1000000;
+			}
+			after.tv_usec -= before.tv_usec;
+
+			precise_interval.tv_sec = interval.tv_sec - after.tv_sec;
+			precise_interval.tv_nsec = interval.tv_nsec;
+			if (precise_interval.tv_nsec < 1000*after.tv_usec) {
+				precise_interval.tv_sec -= 1;
+				precise_interval.tv_nsec += 1000000000;
+			}
+			precise_interval.tv_nsec -= 1000*after.tv_usec;
+			
+			nanosleep(&precise_interval, NULL);
+		} else {
+			nanosleep(&interval, NULL);
+		}
 	}
 
 	return 0;
