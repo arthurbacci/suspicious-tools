@@ -11,8 +11,7 @@
  */
 
 /*
- * TODO: implement --precise
- * TODO: handle signals
+ * TODO: handle signals (maybe)
  */
 
 #define _POSIX_C_SOURCE 199309L
@@ -38,9 +37,8 @@
 static unsigned int options = 0;
 
 void usage() {
-	/* FIXME: less suspicious */
-	fprintf(stderr, "amongus\n");
-	exit(EXIT_FAILURE);
+	fprintf(stderr, "watch [-n seconds] [-tpx] command\n");
+	exit(1);
 }
 
 int parse_interval(const char *ss, struct timespec *interval) {
