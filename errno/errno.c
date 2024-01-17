@@ -138,6 +138,8 @@ void do_all_locales(int argc, char **argv) {
 int main(int argc, char **argv) {
 	int all_locales;
 
+	setlocale(LC_ALL, "");
+
 	all_locales = susargparse_option(argc, argv, "S");
 	
 	if (all_locales) do_all_locales(argc, argv);
