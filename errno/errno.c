@@ -24,6 +24,7 @@
 
 #include <susargparse.h>
 
+/* Maximum length of each line returned by `locale -a` */
 #define LOCALE_BUFLEN 128
 
 
@@ -92,6 +93,9 @@ void do_errno(int argc, char **argv) {
 }
 
 void do_all_locales(int argc, char **argv) {
+	/* Similar to popen("locale -a"), but without using the shell.
+	 * Child execs the command, using the pipe as stdout */
+
 	int pipe_f[2];
 
 	/* TODO: error handling */
@@ -117,13 +121,15 @@ void do_all_locales(int argc, char **argv) {
 
 	close(pipe_f[1]);
 
+	/* `locale -a` returns one locale name by line */
 	for (;;) {
 		char buf[LOCALE_BUFLEN];
 		size_t len;
 
-
-		for (len = 0; 1 == read(pipe_f[0], &buf[len], 1); len++)
+		for (len = 0; 1 == read(pipe_f[0], &buf[len], 1); len++) {
 			if (buf[len] == '\n') break;
+			if (len >= LOCALE_BUFLEN) die("locale -a returned >= LOCALE_BUFLEN");
+		}
 		buf[len] = '\0';
 		
 		if (len == 0) break;
